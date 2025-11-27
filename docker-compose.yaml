@@ -1,0 +1,166 @@
+version: "3.8"
+
+volumes:
+  postgresql-mlflow-data:
+  mlflow-artifact-store:
+  cybulde-model_mlflow-artifact-store:
+    external: true
+  cybulde-model_postgresql-mlflow-data:
+    external: true
+
+x-app-template: &APP_TEMPLATE
+  user: "${USER_ID:-1000}"
+  hostname: "${HOST_NAME:-emkademy}"
+  image: cybulde-model
+  build:
+    context: .
+    dockerfile: ./docker/Dockerfile
+    args:
+      USER_NAME: "${USER_NAME:-kyuksel}"
+      USER_ID: "${USER_ID:-1000}"
+  env_file:
+    - .envs/.postgres
+    - .envs/.mlflow-common
+    - .envs/.mlflow-dev
+  volumes:
+    - ./:/app/
+    - mlflow-artifact-store:/mlflow-artifact-store
+    - ~/.config/gcloud/:/home/${USER_NAME}/.config/gcloud
+  ipc: host
+  init: true
+
+services:
+  mlflow-db:
+    container_name: mlflow-backend-store
+    image: postgres:14
+    env_file:
+      - .envs/.mlflow-common
+      - .envs/.mlflow-dev
+      - .envs/.postgres
+    volumes:
+      - postgresql-mlflow-data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    profiles:
+      - dev
+
+  mlflow-server:
+    user: root
+    hostname: emkademy
+    container_name: mlflow-server-web-app-container
+    image: mlflow-server-web-app
+    build:
+      context: .
+      dockerfile: ./docker/mlflow.Dockerfile
+      args:
+        USER_NAME: "${USER_NAME:-kyuksel}"
+        USER_ID: "${USER_ID:-1000}"
+    ports:
+      - 6101:6101
+    ipc: host
+    init: true
+    env_file:
+      - .envs/.mlflow-common
+      - .envs/.mlflow-dev
+      - .envs/.postgres
+    volumes:
+      - ~/.config/gcloud/:/home/${USER_NAME}/.config/gcloud
+      - cybulde-model_mlflow-artifact-store:/mlflow-artifact-store
+    depends_on:
+      - mlflow-db
+
+  app-dev:
+    <<: *APP_TEMPLATE
+    container_name: cybulde-model-dev-container
+    ports:
+      - ${LOCAL_DEV_MLFLOW_SERVER_PORT}:${LOCAL_DEV_MLFLOW_SERVER_PORT}
+      - 8080:8080
+      - 8888:8888
+      - 8001:8001
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles:
+      - dev
+
+  app-prod:
+    <<: *APP_TEMPLATE
+    container_name: cybulde-model-prod-container
+    env_file:
+      - .envs/.mlflow-common
+      - .envs/.mlflow-prod
+      - .envs/.infrastructure
+    ports:
+      - ${PROD_MLFLOW_SERVER_PORT}:${PROD_MLFLOW_SERVER_PORT}
+    profiles:
+      - prod
+
+  app-ci:
+    <<: *APP_TEMPLATE
+    container_name: cybulde-model-ci-container
+    ports:
+      - ${LOCAL_DEV_MLFLOW_SERVER_PORT}:${LOCAL_DEV_MLFLOW_SERVER_PORT}
+    profiles:
+      - ci
+
+  cybulde-data-processing:
+    user: root
+    hostname: emkademy
+    container_name: cybulde-data-processing-web-app
+    image: ${CYBULDE_DATA_PROCESSING_GCP_DOCKER_IMAGE}
+    ports:
+      - 8000:8000
+    ipc: host
+    init: true
+    volumes:
+      - ~/.config/gcloud/:/home/${USER_NAME}/.config/gcloud
+
+  cybulde-model:
+    user: root
+    hostname: emkademy
+    container_name: cybulde-model-web-app
+    image: ${CYBULDE_MODEL_GCP_DOCKER_IMAGE}
+    ports:
+      - 8001:8001
+    ipc: host
+    init: true
+    env_file:
+      - .envs/.mlflow-common
+      - .envs/.mlflow-dev
+      - .envs/.postgres
+    volumes:
+      - ~/.config/gcloud/:/home/${USER_NAME}/.config/gcloud
+      - cybulde-model_mlflow-artifact-store:/mlflow-artifact-store
+    depends_on:
+      - mlflow-server
+
+  app:
+    user: "${USER_ID:-1000}"
+    hostname: "${HOST_NAME:-emkademy}"
+    image: cybulde-web-app
+    container_name: cybulde-web-app
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+      args:
+        USER_NAME: "${USER_NAME:-kyuksel}"
+        USER_ID: "${USER_ID:-1000}"
+    volumes:
+      - ./:/app/
+      - ~/.config/gcloud/:/home/${USER_NAME}/.config/gcloud
+    ports:
+      - 8080:8080
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ipc: host
+    init: true
