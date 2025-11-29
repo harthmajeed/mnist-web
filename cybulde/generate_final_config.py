@@ -40,5 +40,18 @@ def generate_final_config(config: "Config", dict_config: DictConfig) -> None:
         log_artifacts_for_reproducibility()
 
 
+        config_path = args.config_path
+        config_name = args.config_name
+        overrides = args.overrides
+
+        config = compose_config(config_path=config_path, config_name=config_name, overrides=overrides)
+
+        config_save_dir = Path("./cybulde/configs/automatically_generated")
+        config_save_dir.mkdir(parents=True, exist_ok=True)
+
+        save_config_as_yaml(config, str(config_save_dir / f"{config_name}.yaml"))
+        save_config_as_pickle(config, str(config_save_dir / f"{config_name}.pickle"))
+
+
 if __name__ == "__main__":
     generate_final_config()

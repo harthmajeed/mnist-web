@@ -7,6 +7,11 @@ from cybulde.models.common.exporter import TarModelLoader
 from cybulde.utils.config_utils import load_config
 from cybulde.utils.mlflow_utils import get_client
 
+config = load_pickle_config(
+    config_path="./cybulde/configs/automatically_generated", config_name="data_processing_config"
+)
+dataset_cleaner_manager = instantiate(config.dataset_cleaner_manager)
+
 config = load_config(config_path="../configs/automatically_generated", config_name="config")
 tokenizer = instantiate(config.tasks.binary_text_classification_task.data_module.transformation)
 
@@ -28,3 +33,7 @@ def predict_cyberbullying(text: str) -> dict[str, int]:
     probs = model(tokens)
     classes = (probs >= 0.5).item()
     return {"is_cyberbullying": int(classes)}
+
+@app.get("/process_data")
+def process_data(text: str) -> dict[str, str]:
+    return {"cleaned_text": dataset_cleaner_manager(text)}

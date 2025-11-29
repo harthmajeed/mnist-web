@@ -1,0 +1,18 @@
+defaults:
+  - data_processing_config_schema
+  - dataset_reader_manager: ghc_jigsaw_twitter
+  - dataset_cleaner_manager: simple_dataset_cleaner
+  - dask_cluster: local_dask_cluster
+
+  - override hydra/job_logging: custom
+  - override hydra/hydra_logging: disabled
+
+  - _self_
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+
+version: v3
+processed_data_save_dir: gs://emkademy/cybulde/data/processed/${run_tag}

@@ -27,9 +27,9 @@ PROD_PROFILE_NAME = prod
 SERVICE_NAME = app
 CONTAINER_NAME = cybulde-template-container
 
-DIRS_TO_VALIDATE = cybulde
-DOCKER_COMPOSE_RUN = $(DOCKER_COMPOSE_COMMAND) run --rm $(SERVICE_NAME)
-DOCKER_COMPOSE_EXEC = $(DOCKER_COMPOSE_COMMAND) exec $(SERVICE_NAME)
+# DIRS_TO_VALIDATE = cybulde
+# DOCKER_COMPOSE_RUN = $(DOCKER_COMPOSE_COMMAND) run --rm $(SERVICE_NAME)
+# DOCKER_COMPOSE_EXEC = $(DOCKER_COMPOSE_COMMAND) exec $(SERVICE_NAME)
 
 ifeq (, $(shell which nvidia-smi))
 	PROFILE = ci
@@ -47,6 +47,10 @@ DOCKER_COMPOSE_EXEC = $(DOCKER_COMPOSE_COMMAND) exec $(SERVICE_NAME)
 
 DOCKER_COMPOSE_RUN_PROD = $(DOCKER_COMPOSE_COMMAND) run --rm $(PROD_SERVICE_NAME)
 DOCKER_COMPOSE_EXEC_PROD = $(DOCKER_COMPOSE_COMMAND) exec $(PROD_SERVICE_NAME)
+
+LOCAL_DOCKER_IMAGE_NAME = cybulde-data-processing
+GCP_DOCKER_IMAGE_NAME = europe-west4-docker.pkg.dev/cybulde/cybulde/cybulde-data-processing
+GCP_DOCKER_IMAGE_TAG := $(strip $(shell uuidgen))
 
 IMAGE_TAG := $(shell echo "train-$$(uuidgen)")
 
@@ -69,6 +73,40 @@ run-tasks: generate-final-config push
 ## Local run tasks
 local-run-tasks: local-generate-final-config
 	$(DOCKER_COMPOSE_EXEC) torchrun cybulde/run_tasks.py
+
+## Generate final data processing config. For overrides use: OVERRIDES=<overrides>
+generate-final-data-processing-config: up
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/generate_final_config.py --config-name data_processing_config --overrides docker_image_name=$(GCP_DOCKER_IMAGE_NAME) docker_image_tag=$(GCP_DOCKER_IMAGE_TAG) $${OVERRIDES}
+
+## Generate final tokenizer training config. For overrides use: OVERRIDES=<overrides>
+generate-final-tokenizer-training-config: up
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/generate_final_config.py --config-name tokenizer_training_config --overrides docker_image_name=$(GCP_DOCKER_IMAGE_NAME) docker_image_tag=$(GCP_DOCKER_IMAGE_TAG) $${OVERRIDES}
+
+## Processes raw data
+process-data: generate-final-data-processing-config push
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/process_data.py
+
+## Train a tokenizer
+train-tokenizer: generate-final-tokenizer-training-config push
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/train_tokenizer.py
+
+## Processes raw data
+local-process-data: generate-final-data-processing-config
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/process_data.py
+
+## Train a tokenizer locally
+local-train-tokenizer: generate-final-tokenizer-training-config
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/train_tokenizer.py
+
+## Processes raw data
+temp-local-process-data: generate-final-data-processing-config
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/temp_process_data.py
+
+## Push docker image to GCP artifact registery
+push: build
+	gcloud auth configure-docker --quiet europe-west4-docker.pkg.dev
+	docker tag $(LOCAL_DOCKER_IMAGE_NAME):latest "$(GCP_DOCKER_IMAGE_NAME):$(GCP_DOCKER_IMAGE_TAG)"
+	docker push "$(GCP_DOCKER_IMAGE_NAME):$(GCP_DOCKER_IMAGE_TAG)"
 
 ## Start streamlit app
 start-streamlit-app: up
