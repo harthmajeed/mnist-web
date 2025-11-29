@@ -112,6 +112,9 @@ push: build
 start-streamlit-app: up
 	$(DOCKER_COMPOSE_EXEC) python ./cybulde/streamlit_app.py
 
+version-data: up
+	$(DOCKER_COMPOSE_EXEC) python ./cybulde/version_data.py
+
 ## Starts jupyter lab
 notebook: up
 	$(DOCKER_COMPOSE_EXEC) jupyter-lab --ip 0.0.0.0 --port 8888 --no-browser

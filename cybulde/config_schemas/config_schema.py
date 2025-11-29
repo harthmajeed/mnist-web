@@ -19,6 +19,9 @@ class Config:
     model_selector: Optional[model_selector_schemas.ModelSelectorConfig] = None
     registered_model_name: Optional[str] = None
     docker_image: Optional[str] = None
+    dvc_remote_name: str = "gcs-storage"
+    dvc_remote_url: str = "gs://emkademy/cybulde/data/raw"
+    dvc_raw_data_folder: str = "data/raw"
 
 
 def setup_config() -> None:

@@ -25,6 +25,8 @@ from omegaconf import DictConfig, OmegaConf
 
 from cybulde.config_schemas import config_schema
 from cybulde.utils.io_utils import open_file, write_yaml_file
+from cybulde.config_schemas import data_processing_config_schema, tokenizer_training_config_schema
+
 
 if TYPE_CHECKING:
     from cybulde.config_schemas.config_schema import Config
