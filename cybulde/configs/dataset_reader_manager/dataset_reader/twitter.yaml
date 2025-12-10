@@ -1,7 +1,0 @@
-defaults:
-  - twitter_dataset_reader_schema
-
-dataset_dir: ${data_local_save_dir}/twitter
-dataset_name: twitter
-dev_split_ratio: 0.125
-test_split_ratio: 0.1
