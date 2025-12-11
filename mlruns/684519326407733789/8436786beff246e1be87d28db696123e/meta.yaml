@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/harth/OneDrive/Documents/mlflow/mlruns/684519326407733789/8436786beff246e1be87d28db696123e/artifacts
+end_time: 1759021906955
+entry_point_name: ''
+experiment_id: '684519326407733789'
+lifecycle_stage: active
+run_id: 8436786beff246e1be87d28db696123e
+run_name: adorable-hog-260
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759021899045
+status: 3
+tags: []
+user_id: harth

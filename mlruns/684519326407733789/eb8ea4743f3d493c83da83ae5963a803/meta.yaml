@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/harth/OneDrive/Documents/mlflow/mlruns/684519326407733789/eb8ea4743f3d493c83da83ae5963a803/artifacts
+end_time: 1759022141575
+entry_point_name: ''
+experiment_id: '684519326407733789'
+lifecycle_stage: active
+run_id: eb8ea4743f3d493c83da83ae5963a803
+run_name: grandiose-conch-139
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759022133548
+status: 3
+tags: []
+user_id: harth

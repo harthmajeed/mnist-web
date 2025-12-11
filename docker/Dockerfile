@@ -1,57 +1,35 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.10-slim
 
-ARG USER_ID
-ARG USER_NAME
-ENV HOME=/home/${USER_NAME} \
-    VIRTUAL_ENV=/home/${USER_NAME}/venv
+ARG MLFLOW_ARTIFACT_STORE
+
 ENV \
-  PYTHONUNBUFFERED=1 \
-  DEBIAN_FRONTEND=noninteractive \
-  TZ=Europe/Warsaw \
-  PATH="/usr/local/gcloud/google-cloud-sdk/bin:${HOME}/.local/bin:${VIRTUAL_ENV}/bin:${PATH}" \
-  PYTHONPATH="/app:${PYTHONPATH}" \
-  BUILD_POETRY_LOCK="${HOME}/poetry.lock.build"
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV="${HOME}/venv" \
+    PATH="${HOME}/venv/bin:${PATH}" \ 
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    DEBIAN_FRONTEND='noninteractive' \
+    BUILD_POETRY_LOCK="${HOME}/poetry.lock.build"
 
 RUN apt-get -qq update \
-    && apt-get -qq -y install vim gcc curl git build-essential libb64-dev software-properties-common \
+    && apt-get -qq -y install git \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get -qq -y clean
 
-RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-426.0.0-linux-x86_64.tar.gz > /tmp/google-cloud-sdk.tar.gz
-RUN mkdir -p /usr/local/gcloud \
-    && tar -C /usr/local/gcloud -xf /tmp/google-cloud-sdk.tar.gz \
-    && /usr/local/gcloud/google-cloud-sdk/install.sh --usage-reporting false --command-completion true --bash-completion true --path-update true --quiet
+RUN mkdir -p "${MLFLOW_ARTIFACT_STORE}" /app
 
-RUN addgroup --system --gid ${USER_ID} ${USER_NAME} \
-    && useradd --system -m --no-log-init --home-dir ${HOME} --uid ${USER_ID} --gid ${USER_NAME} --groups ${USER_NAME} ${USER_NAME}
+COPY ./docker/run-server.sh /run-server.sh
+RUN sed -i 's/\r$//' /run-server.sh && chmod +x /run-server.sh
 
-RUN chown -R ${USER_NAME}:${USER_NAME} ${HOME}
-RUN mkdir -p /app /mlflow-artifact-store "${HOME}/.local/share" && chown -R ${USER_NAME}:${USER_NAME} /app /tmp /mlflow-artifact-store "${HOME}/.local"
-RUN mkdir -p /app && chown -R ${USER_NAME}:${USER_NAME} /app /tmp
+RUN HOME=/tmp pip install --no-cache-dir poetry==1.5.1
 
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.7.1
-
-USER ${USER_NAME}
-
-COPY pyproject.toml *.lock /app/
+COPY ./pyproject.toml ./*.lock /app/
 WORKDIR /app
 
-RUN poetry config virtualenvs.create false \
-    && python3.10 -m venv ${VIRTUAL_ENV} \
-    && pip install --upgrade pip setuptools \
-    && poetry install && cp poetry.lock ${BUILD_POETRY_LOCK} \
-    && rm -rf ${HOME}/.cache/*
+RUN python3.10 -m venv "${VIRTUAL_ENV}" \
+    && pip install --upgrade pip \
+    && poetry install \
+    && cp poetry.lock "${BUILD_POETRY_LOCK}" \
+    && rm -rf "${HOME}/.cache/*"
 
-USER root
-COPY ./docker/scripts/* /
-RUN chown -R ${USER_NAME} /*.sh && chmod +x /*.sh
-RUN chown -R ${USER_NAME} ${HOME}/.local
-USER ${USER_NAME}
-
-RUN git config --global user.email "emkademy@gmail.com" \
-    && git config --global user.name "Kıvanç Yüksel"
-
-RUN python3.10 -m nltk.downloader stopwords && python3.10 -m nltk.downloader punkt
-
-COPY . /app/
-CMD ["/startup-script.sh"]
+CMD ["/run-server.sh"]

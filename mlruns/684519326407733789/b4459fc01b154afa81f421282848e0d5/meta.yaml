@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/harth/OneDrive/Documents/mlflow/mlruns/684519326407733789/b4459fc01b154afa81f421282848e0d5/artifacts
+end_time: 1761188050949
+entry_point_name: ''
+experiment_id: '684519326407733789'
+lifecycle_stage: active
+run_id: b4459fc01b154afa81f421282848e0d5
+run_name: merciful-snail-138
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761188043072
+status: 3
+tags: []
+user_id: harth

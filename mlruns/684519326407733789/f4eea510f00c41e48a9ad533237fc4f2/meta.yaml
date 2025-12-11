@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/harth/OneDrive/Documents/mlflow/mlruns/684519326407733789/f4eea510f00c41e48a9ad533237fc4f2/artifacts
+end_time: 1759022167990
+entry_point_name: ''
+experiment_id: '684519326407733789'
+lifecycle_stage: active
+run_id: f4eea510f00c41e48a9ad533237fc4f2
+run_name: capricious-goose-466
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759022159709
+status: 3
+tags: []
+user_id: harth

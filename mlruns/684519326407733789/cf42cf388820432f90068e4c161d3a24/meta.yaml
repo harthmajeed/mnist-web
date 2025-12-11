@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/harth/OneDrive/Documents/mlflow/mlruns/684519326407733789/cf42cf388820432f90068e4c161d3a24/artifacts
+end_time: 1759022109301
+entry_point_name: ''
+experiment_id: '684519326407733789'
+lifecycle_stage: active
+run_id: cf42cf388820432f90068e4c161d3a24
+run_name: gifted-skink-880
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759022101311
+status: 3
+tags: []
+user_id: harth

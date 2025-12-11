@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/harth/OneDrive/Documents/mlflow/mlruns/684519326407733789/70b3100764684e71a537586703ffc64f/artifacts
+end_time: 1759021624040
+entry_point_name: ''
+experiment_id: '684519326407733789'
+lifecycle_stage: active
+run_id: 70b3100764684e71a537586703ffc64f
+run_name: brawny-newt-100
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759021615817
+status: 3
+tags: []
+user_id: harth
