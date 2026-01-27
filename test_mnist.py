@@ -4,6 +4,11 @@ from tensorflow.keras import layers
 import numpy as np
 import mlflow
 
+from config_schemas.config_schema import setup_config
+
+#setup config
+setup_config()
+
 # 1. Load and prepare the MNIST dataset
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
@@ -49,10 +54,6 @@ model = keras.Sequential(
 
 model.summary()
 
-# 3. Compile and train the model
-batch_size = 128
-epochs = 5
-
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 
 
@@ -60,42 +61,51 @@ mlflow.set_tracking_uri(uri="http://localhost:6101")
 mlflow.set_experiment("test_mnist")
 mlflow.autolog()
 
-with mlflow.start_run():
-    # mlflow.log_param("batch_size", batch_size)
-    # mlflow.log_param("epochs", epochs)
+@hydra.main(config_path="configs", config_name="config", version_base=None)
+def main(config: DictConfig) -> None:
+    with mlflow.start_run():
+        # 3. Compile and train the model
+        # mlflow.log_param("batch_size", batch_size)
+        # mlflow.log_param("epochs", epochs)
+        
+        batch_size = batch_size
+        epochs = epochs
 
-    history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
+        history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
 
-    print("---------------------------------------------")
-    print(history.history)
-    print("---------------------------------------------")
+        print("---------------------------------------------")
+        print(history.history)
+        print("---------------------------------------------")
 
-    # mlflow.log_metrics(["accuracy", history.history['accuracy']])
-    # mlflow.log_metrics(["loss", history.history['loss']])
-    # mlflow.log_metrics(["val_accuracy", history.history['val_accuracy']])
-    # mlflow.log_metrics(["val_loss", history.history['val_loss']])
+        # mlflow.log_metrics(["accuracy", history.history['accuracy']])
+        # mlflow.log_metrics(["loss", history.history['loss']])
+        # mlflow.log_metrics(["val_accuracy", history.history['val_accuracy']])
+        # mlflow.log_metrics(["val_loss", history.history['val_loss']])
 
 
-    # 4. Evaluate the model
-    score = model.evaluate(x_test, y_test, verbose=0)
-    print("\nTest loss:", score[0])
-    print("Test accuracy:", score[1])
+        # 4. Evaluate the model
+        score = model.evaluate(x_test, y_test, verbose=0)
+        print("\nTest loss:", score[0])
+        print("Test accuracy:", score[1])
 
-    mlflow.log_metric("Test loss", score[0])
-    mlflow.log_metric("Test accuracy", score[1])
+        mlflow.log_metric("Test loss", score[0])
+        mlflow.log_metric("Test accuracy", score[1])
 
-    # 5. Save the trained model
-    model_filename = "mnist_cnn_model.keras"
-    model.save(model_filename)
-    print(f"\nModel saved to {model_filename}")
+        # 5. Save the trained model
+        model_filename = "mnist_cnn_model.keras"
+        model.save(model_filename)
+        print(f"\nModel saved to {model_filename}")
 
-    # 6. Load the saved model
-    loaded_model = keras.models.load_model(model_filename)
-    print(f"Model loaded from {model_filename}")
+        # 6. Load the saved model
+        loaded_model = keras.models.load_model(model_filename)
+        print(f"Model loaded from {model_filename}")
 
-    # 7. Use the loaded model to make predictions (optional)
-    predictions = loaded_model.predict(x_test[:5])
-    print("\nPredictions for the first 5 test samples:")
-    for i, pred in enumerate(predictions):
-        print(f"Sample {i}: Predicted digit {np.argmax(pred)}, True digit {np.argmax(y_test[i])}")
-    
+        # 7. Use the loaded model to make predictions (optional)
+        predictions = loaded_model.predict(x_test[:5])
+        print("\nPredictions for the first 5 test samples:")
+        for i, pred in enumerate(predictions):
+            print(f"Sample {i}: Predicted digit {np.argmax(pred)}, True digit {np.argmax(y_test[i])}")
+        
+        
+if __name__ == "__main__":
+    main()
