@@ -1,4 +1,4 @@
 defaults:
   - default
-batch_size: 128
-epochs: 5
+batch_size: 64
+epochs: 3

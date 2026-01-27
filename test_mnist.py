@@ -3,11 +3,12 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
 import mlflow
+import hydra
+from hydra.utils import instantiate
+from omegaconf import DictConfig, OmegaConf
 
 from config_schemas.config_schema import setup_config
 
-#setup config
-setup_config()
 
 # 1. Load and prepare the MNIST dataset
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
@@ -61,15 +62,26 @@ mlflow.set_tracking_uri(uri="http://localhost:6101")
 mlflow.set_experiment("test_mnist")
 mlflow.autolog()
 
+#setup config
+setup_config()
+
 @hydra.main(config_path="configs", config_name="config", version_base=None)
 def main(config: DictConfig) -> None:
     with mlflow.start_run():
+        print(OmegaConf.to_yaml(config))
+
+        params = instantiate(config.training_params)
+
+        batch_size = config.training_params.batch_size
+        epochs = config.training_params.epochs
+
+        print(batch_size)
+        print(epochs)
+        exit()
+
         # 3. Compile and train the model
         # mlflow.log_param("batch_size", batch_size)
         # mlflow.log_param("epochs", epochs)
-        
-        batch_size = batch_size
-        epochs = epochs
 
         history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
 
